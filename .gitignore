@@ -1,0 +1,4 @@
+bin/
+packages/
+PurifyVS/obj
+.vs/
