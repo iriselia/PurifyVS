@@ -115,7 +115,6 @@ namespace FrenchKiwi.PurifyVS
 		{
 			string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
 
-			FileEventHandler.OnDisconnection();
 			_dte.Solution.Close();
 			File.Delete(SolutionFile);
 
@@ -217,7 +216,6 @@ namespace FrenchKiwi.PurifyVS
 			//MessageBox.Show("Damn son...");
 			// Specify what is done when a file is changed, created, or deleted.
 			Console.WriteLine("File: " + e.FullPath + " " + e.ChangeType);
-			FileEventHandler.OnDisconnection();
 			_dte.Solution.Close();
 
 		}
