@@ -1,35 +1,65 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-    <Extern href="stdidcmd.h"/>
-    <Extern href="vsshlids.h"/>
+  <Extern href="stdidcmd.h" />
+  <Extern href="vsshlids.h" />
 
-    <Commands package="guidPurifyVSPkg">
-        <Buttons>
-            <Button guid="guidPurifyVSCmdSet" id="cmdidMyCommand" priority="0x0200" type="Button">
-                <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
-                <CommandFlag>DynamicVisibility</CommandFlag>
-                <CommandFlag>DefaultDisabled</CommandFlag>
-                <Strings>
-                    <CommandName>AddEmptyFile</CommandName>
-                    <ButtonText>New Empty File...</ButtonText>
-                </Strings>
-            </Button>
-        </Buttons>
-    </Commands>
+  <Commands package="guidPurifyVSPkg">
+    <Buttons>
+      <Button guid="guidPurifyVSCmdSet" id="cmdIdAddNewFile" priority="0x0200" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <CommandName>AddEmptyFile</CommandName>
+          <ButtonText>New Empty File...</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidPurifyVSCmdSet" id="cmdIdPurifyScript" priority="0x0100" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_SOLUTION_BUILD" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Regenerate Solution</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidPurifyVSCmdSet" id="cmdIdPurifyScript" priority="0x0100" type="Button">
+        <Parent guid="guidPurifyVSCmdSet" id="MyMenuGroup" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Regenerate Solution</ButtonText>
+        </Strings>
+      </Button>
 
-    <KeyBindings>
-        <KeyBinding guid="guidPurifyVSCmdSet" id="cmdidMyCommand" mod1="Shift" key1="VK_F2" editor="guidVSStd97"/>
-    </KeyBindings>
+    </Buttons>
+    <Bitmaps>
+      <Bitmap guid="guidImages" href="icon.png" usedList="bmpPic1" />
+    </Bitmaps>
+    <Groups>
+      <Group guid="guidPurifyVSCmdSet" id="MyMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
+      </Group>
+    </Groups>
+  </Commands>
 
-    <Symbols>
-        <!-- This is the package guid. -->
-        <GuidSymbol name="guidPurifyVSPkg" value="{27dd9dea-6dd2-403e-929d-3ff20d896c5e}" />
+  <KeyBindings>
+    <KeyBinding guid="guidPurifyVSCmdSet" id="cmdIdAddNewFile" mod1="Shift" key1="VK_F2" editor="guidVSStd97" />
+    <KeyBinding guid="guidPurifyVSCmdSet" id="cmdIdPurifyScript" mod1="Alt Shift" key1="G" editor="guidVSStd97" />
+  </KeyBindings>
 
-        <!-- This is the guid used to group the menu commands together -->
-        <GuidSymbol name="guidPurifyVSCmdSet" value="{32af8a17-bbbc-4c56-877e-fc6c6575a8cf}">
-            <IDSymbol name="cmdidMyCommand" value="0x0100" />
-        </GuidSymbol>
-    </Symbols>
+  <Symbols>
+    <!-- This is the package guid. -->
+    <GuidSymbol name="guidPurifyVSPkg" value="{27dd9dea-6dd2-403e-929d-3ff20d896c5e}" />
+
+    <!-- This is the guid used to group the menu commands together -->
+    <GuidSymbol name="guidPurifyVSCmdSet" value="{32af8a17-bbbc-4c56-877e-fc6c6575a8cf}">
+      <IDSymbol name="MyMenuGroup" value="4128" />
+      <IDSymbol name="cmdIdAddNewFile" value="0x0100" />
+      <IDSymbol name="cmdIdPurifyScript" value="0x0200" />
+    </GuidSymbol>
+
+    <GuidSymbol name="guidImages" value="{cc4370fe-ba29-4c8c-a506-205879faa858}">
+      <IDSymbol name="bmpPic1" value="1" />
+    </GuidSymbol>
+  </Symbols>
 
 </CommandTable>

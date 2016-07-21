@@ -14,7 +14,7 @@ namespace FrenchKiwi.PurifyVS
 {
 	static class ProjectHelper
 	{
-		static DTE2 _dte = PurifyVSPackage.DTE as DTE2;
+		static DTE2 _dte = PurifyVS.DTE as DTE2;
 
 		// Add stuff
 		public static ProjectItem AddFile(this Project project, string file, string itemType = null)
@@ -47,6 +47,40 @@ namespace FrenchKiwi.PurifyVS
 				}
 			}
 		}
+		public static bool HasIncludeDirectory(this VCProject VCProject, string Directory)
+		{
+			Directory = Directory.TrimEnd('\\');
+
+			IEnumerable projectConfigurations = VCProject.Configurations as IEnumerable;
+			foreach (Object objectProjectConfig in projectConfigurations)
+			{
+				VCConfiguration vcProjectConfig = objectProjectConfig as VCConfiguration;
+				IEnumerable projectTools = vcProjectConfig.Tools as IEnumerable;
+				foreach (Object objectProjectTool in projectTools)
+				{
+					VCCLCompilerTool compilerTool = objectProjectTool as VCCLCompilerTool;
+					if (compilerTool != null)
+					{
+						//string additionalIncludeDirs = compilerTool.AdditionalIncludeDirectories;
+						List<string> IncludeDirs = compilerTool.AdditionalIncludeDirectories.Split(';').Distinct().ToList();
+						string result = IncludeDirs.Find(
+							delegate (string s)
+							{
+								return s == Directory;
+							}
+						);
+
+						if (result != null)
+						{
+							return true;
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+
 		public static void RemoveIncludeDirectory(this VCProject VCProject, string Directory)
 		{
 			Directory = Directory.TrimEnd('\\');
@@ -63,13 +97,20 @@ namespace FrenchKiwi.PurifyVS
 					{
 						//string additionalIncludeDirs = compilerTool.AdditionalIncludeDirectories;
 						List<string> IncludeDirs = compilerTool.AdditionalIncludeDirectories.Split(';').Distinct().ToList();
-						IncludeDirs.Remove(Directory);
+						Directory = Path.GetFullPath(Directory);
+						IncludeDirs.RemoveAll(
+							delegate (string s)
+							{
+								return s.Contains(Directory);
+							}
+							);
 						compilerTool.AdditionalIncludeDirectories = string.Join(";", IncludeDirs);
 						break;
 					}
 				}
 			}
 		}
+
 		public static Project GetActiveProject()
 		{
 			try
@@ -182,7 +223,9 @@ namespace FrenchKiwi.PurifyVS
 				// Files in these filters are in the root folder of the project
 				if (VCFilter.Name == "Source Files" ||
 					VCFilter.Name == "Header Files" ||
-					VCFilter.Name == "Resource Files")
+					VCFilter.Name == "Resource Files" ||
+					VCFilter.Name == "Proto Files"
+					)
 				{
 					currentName = "";
 				}
@@ -270,6 +313,14 @@ namespace FrenchKiwi.PurifyVS
 				else if (fileExt == ".c" || fileExt == ".cpp" || fileExt == ".c++" || fileExt == ".ipp" || fileExt == ".inl")
 				{
 					VCFilter filter = Parent.GetFilterOrCreateNewFilterInProjectOrProjectItem("Source Files");
+					if (filter != null)
+					{
+						result = filter;
+					}
+				}
+				else if (fileExt == ".proto" || fileExt == ".capnp")
+				{
+					VCFilter filter = Parent.GetFilterOrCreateNewFilterInProjectOrProjectItem("Proto Files");
 					if (filter != null)
 					{
 						result = filter;
@@ -380,7 +431,35 @@ namespace FrenchKiwi.PurifyVS
 			return result;
 
 		}
+		public static List<VCFile> GetAllFilesRecursive(this VCFilter VCFilter)
+		{
+			List<VCFile> Result = new List<VCFile>();
+			foreach (VCFile i in VCFilter.Files)
+			{
+				Result.Add(i);
+			}
+			foreach (VCFilter i in VCFilter.Filters)
+			{
+				Result = Result.Concat(GetAllFilesRecursive(i)).ToList();
+			}
 
+			return Result;
+		}
+
+		public static List<VCFilter> GetAllFiltersRecursive(this VCFilter VCFilter)
+		{
+			List<VCFilter> Result = new List<VCFilter>();
+			foreach (VCFilter i in VCFilter.Filters)
+			{
+				Result.Add(i);
+			}
+			foreach (VCFilter i in VCFilter.Filters)
+			{
+				Result.Concat(GetAllFiltersRecursive(i));
+			}
+
+			return Result;
+		}
 
 		// Misc
 		public static void SetItemType(this ProjectItem item, string itemType)

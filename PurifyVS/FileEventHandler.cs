@@ -20,15 +20,15 @@ namespace FrenchKiwi.PurifyVS
 {
 	public static class FileEventHandler : Object
 	{
-		static DTE _dte = PurifyVSPackage.DTE;
-		private static PurifyVSPackage pkg;
+		static DTE _dte = PurifyVS.DTE;
+		private static PurifyVS pkg;
 		private static VCProjectEngine VCProjectEngine;
 		//private static EnvDTE.ProjectItemsEvents ProjectItemsEvents;
 
 
 		public static void Initialize(object package)
 		{
-			pkg = (PurifyVSPackage)package;
+			pkg = (PurifyVS)package;
 
 			//MessageBox.Show("Connecting add-in");
 			try
@@ -130,7 +130,11 @@ namespace FrenchKiwi.PurifyVS
 				VCProjectEngineEvents.ItemMoved -= new _dispVCProjectEngineEvents_ItemMovedEventHandler(OnProjectItemMoved);
 				VCProjectEngineEvents.ItemRemoved -= new _dispVCProjectEngineEvents_ItemRemovedEventHandler(OnProjectItemRemoved);
 				VCProjectEngineEvents.ItemRenamed -= new _dispVCProjectEngineEvents_ItemRenamedEventHandler(OnProjectItemRenamed);
+				VCProjectEngineEvents.ItemPropertyChange -= new _dispVCProjectEngineEvents_ItemPropertyChangeEventHandler(OnProjectItemPropertyChange);
 			}
+
+			VCProjectEngine = null;
+
 		}
 
 		public static void OnAddInsUpdate()
@@ -147,12 +151,19 @@ namespace FrenchKiwi.PurifyVS
 
 		private static void OnProjectItemAdded(object Item, object ItemParent)
 		{
+			if (!_dte.Solution.IsOpen)
+			{
+				return;
+			}
+
 			VCProjectItem ActualVCItem = Item as VCProjectItem;
 			VCProject ParentProject = ActualVCItem.project;
 			VCFilter VCFilter = Item as VCFilter;
 			if (VCFilter != null)
 			{
 				string DstPath = ProjectHelper.GetDirectoryToVCProjectItemRecursive(VCFilter).TrimEnd('\\');
+
+
 				if (!System.IO.Directory.Exists(DstPath))
 				{
 					System.IO.Directory.CreateDirectory(DstPath);
@@ -168,7 +179,19 @@ namespace FrenchKiwi.PurifyVS
 							if (File.Exists(i))
 							{
 								// It is a file
-								VCFilter.AddFile(i);
+								string DstRelPath = FileSystem.MakeRelativePath(DstPath, i).TrimEnd('\\');
+								bool ShouldAdd = true;
+								foreach (VCFile j in VCFilter.Files)
+								{
+									if (i == j.FullPath)
+									{
+										ShouldAdd = false;
+									}
+								}
+								if (VCFilter.CanAddFile(i) && ShouldAdd)
+								{
+									VCFilter.AddFile(i);
+								}
 							}
 							else
 							{
@@ -380,6 +403,9 @@ namespace FrenchKiwi.PurifyVS
 					return;
 				}
 
+				ParentProject.RemoveIncludeDirectory(OldFilterPath);
+				OnProjectItemAdded(VCFilter, null);
+
 				dynamic AllFiles = VCFilter.Files;
 				dynamic AllFilters = VCFilter.Filters;
 				string SrcFilePath = null;
@@ -393,6 +419,7 @@ namespace FrenchKiwi.PurifyVS
 					SrcFilePath = OldFilterPath + '\\' + RelPath;
 					if (!System.IO.Directory.Exists(DstFolderPath))
 					{
+						ParentProject.AddIncludeDirectory(DstFolderPath);
 						System.IO.Directory.CreateDirectory(DstFolderPath);
 					}
 
@@ -407,21 +434,28 @@ namespace FrenchKiwi.PurifyVS
 					//System.IO.Directory.Move(SrcFilePath, DstFilePath);
 				}
 
-				// Move empty folders as well
+				// Recursively move folders as well
 				foreach (VCProjectItem i in AllFilters)
 				{
-					DstFilePath = ProjectHelper.GetDirectoryToVCProjectItemRecursive(i).TrimEnd('\\');
-					DstFolderPath = System.IO.Directory.GetParent(DstFilePath).FullName;
-					string RelPath = FileSystem.MakeRelativePath(NewFilterPath, DstFilePath);
-					SrcFilePath = OldFilterPath + '\\' + RelPath;
-					if (!System.IO.Directory.Exists(DstFolderPath))
+					string DstPath = ProjectHelper.GetDirectoryToVCProjectItemRecursive(i).TrimEnd('\\');
+					//DstFolderPath = System.IO.Directory.GetParent(DstPath).FullName;
+					string RelPath = FileSystem.MakeRelativePath(NewFilterPath, DstPath);
+					string SrcPath = OldFilterPath + '\\' + RelPath;
+
+                    OnProjectItemMoved(i, Item, OldFilterPath + '\\' + i.ItemName);
+                    /*
+                    if (!System.IO.Directory.Exists(DstPath))
 					{
-						System.IO.Directory.Move(SrcFilePath, DstFilePath);
+						System.IO.Directory.Move(SrcPath, DstPath);
+						ParentProject.RemoveIncludeDirectory(SrcPath);
+						ParentProject.AddIncludeDirectory(DstPath);
 					}
 					else
 					{
-						System.IO.Directory.Delete(SrcFilePath);
+						System.IO.Directory.Delete(SrcPath);
+						ParentProject.RemoveIncludeDirectory(SrcPath);
 					}
+					*/
 				}
 
 				// Clean up old directory if possible
@@ -430,7 +464,6 @@ namespace FrenchKiwi.PurifyVS
 					System.IO.Directory.Delete(OldFilterPath, false);
 				}
 
-				OnProjectItemAdded(VCFilter, null);
 			}
 
 			//MessageBox.Show("Item renamed");

@@ -54,9 +54,9 @@
   <ItemGroup>
     <Compile Include="AddFile\FileSystem.cs" />
     <Compile Include="AddFile\ProjectHelper.cs" />
+    <Compile Include="PurifyScriptHandler.cs" />
     <Compile Include="FileEventHandler.cs" />
-    <Compile Include="Resources\PurifyVS.cs" />
-    <Compile Include="PurifyVSPackage.cs" />
+    <Compile Include="PurifyVS.cs" />
     <Compile Include="Resources\FileNameDialog.xaml.cs">
       <DependentUpon>FileNameDialog.xaml</DependentUpon>
     </Compile>
@@ -75,6 +75,7 @@
     <Content Include="AddFile\FileTemplates\.h.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="Resources\StatusBar.png" />
     <Resource Include="Resources\source.extension.ico">
       <DependentUpon>source.extension.vsixmanifest</DependentUpon>
     </Resource>
@@ -122,6 +123,7 @@
     <Content Include="AddFile\FileTemplates\package.json.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="Resources\Command1.png" />
     <Content Include="Resources\icon.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>

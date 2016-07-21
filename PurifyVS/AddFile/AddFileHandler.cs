@@ -23,18 +23,18 @@ namespace FrenchKiwi.PurifyVS
 {
 	public static class AddFileHandler
 	{
-		static DTE2 _dte = PurifyVSPackage.DTE as DTE2;
-		private static PurifyVSPackage pkg;
+		static DTE2 _dte = PurifyVS.DTE as DTE2;
+		private static PurifyVS pkg;
 		private static OleMenuCommandService mcs;
 
 		public static void Initialize(object package, object menuCommandService)
 		{
-			pkg = (PurifyVSPackage)package;
+			pkg = (PurifyVS)package;
 			mcs = (OleMenuCommandService)menuCommandService;
 			// Register command service
 			if (null != mcs)
 			{
-				CommandID menuCommandID = new CommandID(PackageGuids.guidPurifyVSCmdSet, PackageIds.cmdidMyCommand);
+				CommandID menuCommandID = new CommandID(PackageGuids.guidPurifyVSCmdSet, CommandIDs.cmdIdAddNewFile);
 				var menuItem = new OleMenuCommand(AddFileHandler.MenuItemCallback, menuCommandID);
 				menuItem.BeforeQueryStatus += AddFileHandler.MenuItem_BeforeQueryStatus;
 				mcs.AddCommand(menuItem);
@@ -115,7 +115,7 @@ namespace FrenchKiwi.PurifyVS
 
 		private static IComponentModel GetComponentModel()
 		{
-			return (IComponentModel)PurifyVSPackage.GetGlobalService(typeof(SComponentModel));
+			return (IComponentModel)PurifyVS.GetGlobalService(typeof(SComponentModel));
 		}
 		private static IWpfTextView GetCurentTextView()
 		{
