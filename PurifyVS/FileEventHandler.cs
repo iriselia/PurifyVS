@@ -39,7 +39,10 @@ namespace FrenchKiwi.PurifyVS
 
 					if (Project != null)
 					{
-						OnConnectItem(i);
+						if (OnConnectItem(i))
+                        {
+                            break;
+                        }
 					}
 					//OnConnectItem(i as ProjectItem);
 				}
@@ -53,9 +56,34 @@ namespace FrenchKiwi.PurifyVS
 			catch (System.Exception)
 			{
 			}
-		}
 
-		private static void OnConnectItem(object Item)
+            _dte.Events.BuildEvents.OnBuildBegin += new _dispBuildEvents_OnBuildBeginEventHandler(OnBuildBegin);
+            _dte.Events.BuildEvents.OnBuildDone += new _dispBuildEvents_OnBuildDoneEventHandler(OnBuildDone);
+
+
+        }
+        private static void OnBuildBegin(vsBuildScope Scope, vsBuildAction Action)
+        {
+            OnDisconnection();
+        }
+
+        private static void OnBuildDone(vsBuildScope Scope, vsBuildAction Action)
+        {
+            foreach (object i in _dte.Solution.Projects)
+            {
+                Project Project = i as Project;
+
+                if (Project != null)
+                {
+                    if (OnConnectItem(i))
+                    {
+                        break;
+                    }
+                }
+                //OnConnectItem(i as ProjectItem);
+            }
+        }
+        private static bool OnConnectItem(object Item)
 		{
 
 			Project Project = Item as Project;
@@ -93,7 +121,7 @@ namespace FrenchKiwi.PurifyVS
 						// We only set it an register events once
 						if (VCProjectEngine != null)
 						{
-							return;
+							return false;
 						}
 
 						VCProjectEngine = VCProject.VCProjectEngine;
@@ -105,6 +133,7 @@ namespace FrenchKiwi.PurifyVS
 							VCProjectEngineEvents.ItemRemoved += new _dispVCProjectEngineEvents_ItemRemovedEventHandler(OnProjectItemRemoved);
 							VCProjectEngineEvents.ItemRenamed += new _dispVCProjectEngineEvents_ItemRenamedEventHandler(OnProjectItemRenamed);
 							VCProjectEngineEvents.ItemPropertyChange += new _dispVCProjectEngineEvents_ItemPropertyChangeEventHandler(OnProjectItemPropertyChange);
+                            return true;
 						}
 					}
 				}
@@ -118,6 +147,7 @@ namespace FrenchKiwi.PurifyVS
 					}
 				}
 			}
+            return false;
 		}
 
 		public static void OnDisconnection()
@@ -442,9 +472,9 @@ namespace FrenchKiwi.PurifyVS
 					string RelPath = FileSystem.MakeRelativePath(NewFilterPath, DstPath);
 					string SrcPath = OldFilterPath + '\\' + RelPath;
 
-                    OnProjectItemMoved(i, Item, OldFilterPath + '\\' + i.ItemName);
-                    /*
-                    if (!System.IO.Directory.Exists(DstPath))
+					OnProjectItemMoved(i, Item, OldFilterPath + '\\' + i.ItemName);
+					/*
+					if (!System.IO.Directory.Exists(DstPath))
 					{
 						System.IO.Directory.Move(SrcPath, DstPath);
 						ParentProject.RemoveIncludeDirectory(SrcPath);
